@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="04-create-users-indexes" author="banking-team" context="dev,prod">
+        <comment>Create performance indexes for users table</comment>
+
+        <createIndex tableName="users" indexName="idx_users_username">
+            <column name="username"/>
+        </createIndex>
+
+        <createIndex tableName="users" indexName="idx_users_email">
+            <column name="email"/>
+        </createIndex>
+
+        <createIndex tableName="users" indexName="idx_users_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="users" indexName="idx_users_created_at">
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="users" indexName="idx_users_name">
+            <column name="first_name"/>
+            <column name="last_name"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="users" indexName="idx_users_username"/>
+            <dropIndex tableName="users" indexName="idx_users_email"/>
+            <dropIndex tableName="users" indexName="idx_users_status"/>
+            <dropIndex tableName="users" indexName="idx_users_created_at"/>
+            <dropIndex tableName="users" indexName="idx_users_name"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="04-create-accounts-indexes" author="banking-team" context="dev,prod">
+        <comment>Create performance indexes for accounts table</comment>
+
+        <createIndex tableName="accounts" indexName="idx_accounts_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="accounts" indexName="idx_accounts_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="accounts" indexName="idx_accounts_account_type">
+            <column name="account_type"/>
+        </createIndex>
+
+        <createIndex tableName="accounts" indexName="idx_accounts_currency">
+            <column name="currency"/>
+        </createIndex>
+
+        <createIndex tableName="accounts" indexName="idx_accounts_created_at">
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="accounts" indexName="idx_accounts_user_status">
+            <column name="user_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="accounts" indexName="idx_accounts_user_type">
+            <column name="user_id"/>
+            <column name="account_type"/>
+        </createIndex>
+
+        <createIndex tableName="accounts" indexName="idx_accounts_balance_currency">
+            <column name="balance"/>
+            <column name="currency"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="accounts" indexName="idx_accounts_user_id"/>
+            <dropIndex tableName="accounts" indexName="idx_accounts_status"/>
+            <dropIndex tableName="accounts" indexName="idx_accounts_account_type"/>
+            <dropIndex tableName="accounts" indexName="idx_accounts_currency"/>
+            <dropIndex tableName="accounts" indexName="idx_accounts_created_at"/>
+            <dropIndex tableName="accounts" indexName="idx_accounts_user_status"/>
+            <dropIndex tableName="accounts" indexName="idx_accounts_user_type"/>
+            <dropIndex tableName="accounts" indexName="idx_accounts_balance_currency"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="04-create-transactions-indexes" author="banking-team" context="dev,prod">
+        <comment>Create performance indexes for payment_transactions table</comment>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_source_account">
+            <column name="source_account_id"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_destination_account">
+            <column name="destination_account_id"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_type">
+            <column name="transaction_type"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_created_at">
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_completed_at">
+            <column name="completed_at"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_reference">
+            <column name="reference"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_currency">
+            <column name="currency"/>
+        </createIndex>
+
+        <!-- Composite indexes for common queries -->
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_user_created">
+            <column name="user_id"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_user_status">
+            <column name="user_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_user_type">
+            <column name="user_id"/>
+            <column name="transaction_type"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_status_created">
+            <column name="status"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="payment_transactions" indexName="idx_transactions_user_reference">
+            <column name="user_id"/>
+            <column name="reference"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_user_id"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_source_account"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_destination_account"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_status"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_type"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_created_at"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_completed_at"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_reference"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_currency"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_user_created"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_user_status"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_user_type"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_status_created"/>
+            <dropIndex tableName="payment_transactions" indexName="idx_transactions_user_reference"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

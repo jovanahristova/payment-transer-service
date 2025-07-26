@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="05-insert-sample-users" author="banking-team" context="dev" runOnChange="false">
+        <comment>Insert sample users for development and testing</comment>
+
+        <insert tableName="users">
+            <column name="user_id" value="USR001"/>
+            <column name="username" value="john.doe"/>
+            <column name="email" value="john.doe@email.com"/>
+            <column name="first_name" value="John"/>
+            <column name="last_name" value="Doe"/>
+            <column name="phone" value="+12345678901"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="user_id" value="USR002"/>
+            <column name="username" value="jane.smith"/>
+            <column name="email" value="jane.smith@email.com"/>
+            <column name="first_name" value="Jane"/>
+            <column name="last_name" value="Smith"/>
+            <column name="phone" value="+12345678902"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="user_id" value="USR003"/>
+            <column name="username" value="bob.johnson"/>
+            <column name="email" value="bob.johnson@email.com"/>
+            <column name="first_name" value="Bob"/>
+            <column name="last_name" value="Johnson"/>
+            <column name="phone" value="+12345678903"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="user_id" value="USR004"/>
+            <column name="username" value="test.user"/>
+            <column name="email" value="test.user@email.com"/>
+            <column name="first_name" value="Test"/>
+            <column name="last_name" value="User"/>
+            <column name="phone" value="+12345678904"/>
+            <column name="status" value="SUSPENDED"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="users"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="05-insert-sample-accounts" author="banking-team" context="dev" runOnChange="false">
+        <comment>Insert sample accounts for development and testing</comment>
+
+        <insert tableName="accounts">
+            <column name="account_id" value="ACC001"/>
+            <column name="user_id" value="USR001"/>
+            <column name="account_name" value="John's Checking"/>
+            <column name="account_type" value="CHECKING"/>
+            <column name="balance" value="5000.00"/>
+            <column name="currency" value="USD"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="accounts">
+            <column name="account_id" value="ACC002"/>
+            <column name="user_id" value="USR001"/>
+            <column name="account_name" value="John's Savings"/>
+            <column name="account_type" value="SAVINGS"/>
+            <column name="balance" value="15000.00"/>
+            <column name="currency" value="USD"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="accounts">
+            <column name="account_id" value="ACC003"/>
+            <column name="user_id" value="USR002"/>
+            <column name="account_name" value="Jane's Checking"/>
+            <column name="account_type" value="CHECKING"/>
+            <column name="balance" value="2500.50"/>
+            <column name="currency" value="USD"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="accounts">
+            <column name="account_id" value="ACC004"/>
+            <column name="user_id" value="USR002"/>
+            <column name="account_name" value="Jane's Business"/>
+            <column name="account_type" value="BUSINESS"/>
+            <column name="balance" value="75000.25"/>
+            <column name="currency" value="USD"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="accounts">
+            <column name="account_id" value="ACC005"/>
+            <column name="user_id" value="USR002"/>
+            <column name="account_name" value="Jane's EUR Account"/>
+            <column name="account_type" value="SAVINGS"/>
+            <column name="balance" value="3200.00"/>
+            <column name="currency" value="EUR"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="accounts">
+            <column name="account_id" value="ACC006"/>
+            <column name="user_id" value="USR003"/>
+            <column name="account_name" value="Bob's Investment"/>
+            <column name="account_type" value="INVESTMENT"/>
+            <column name="balance" value="50000.00"/>
+            <column name="currency" value="USD"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="accounts">
+            <column name="account_id" value="ACC007"/>
+            <column name="user_id" value="USR003"/>
+            <column name="account_name" value="Bob's Checking"/>
+            <column name="account_type" value="CHECKING"/>
+            <column name="balance" value="1200.00"/>
+            <column name="currency" value="USD"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <insert tableName="accounts">
+            <column name="account_id" value="ACC008"/>
+            <column name="user_id" value="USR004"/>
+            <column name="account_name" value="Test Account"/>
+            <column name="account_type" value="CHECKING"/>
+            <column name="balance" value="0.00"/>
+            <column name="currency" value="USD"/>
+            <column name="status" value="SUSPENDED"/>
+            <column name="version" value="0"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="accounts"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

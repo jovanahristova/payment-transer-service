@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="03-create-transactions-table" author="banking-team" context="dev,prod">
+        <comment>Create payment_transactions table for storing transfer records</comment>
+
+        <createTable tableName="payment_transactions">
+            <column name="transaction_id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_account_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination_account_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="CHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_type" type="VARCHAR(30)" defaultValue="INTERNAL_TRANSFER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="reference" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="TIMESTAMP"/>
+            <column name="failure_reason" type="TEXT"/>
+        </createTable>
+
+        <!-- Add foreign key constraints -->
+        <addForeignKeyConstraint baseTableName="payment_transactions"
+                                 baseColumnNames="user_id"
+                                 constraintName="fk_transaction_user"
+                                 referencedTableName="users"
+                                 referencedColumnNames="user_id"
+                                 onDelete="RESTRICT"
+                                 onUpdate="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="payment_transactions"
+                                 baseColumnNames="source_account_id"
+                                 constraintName="fk_source_account"
+                                 referencedTableName="accounts"
+                                 referencedColumnNames="account_id"
+                                 onDelete="RESTRICT"
+                                 onUpdate="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="payment_transactions"
+                                 baseColumnNames="destination_account_id"
+                                 constraintName="fk_destination_account"
+                                 referencedTableName="accounts"
+                                 referencedColumnNames="account_id"
+                                 onDelete="RESTRICT"
+                                 onUpdate="CASCADE"/>
+
+        <sql>
+            ALTER TABLE payment_transactions
+                ADD CONSTRAINT chk_amount_positive
+                    CHECK (amount > 0);
+
+            ALTER TABLE payment_transactions
+                ADD CONSTRAINT chk_different_accounts
+                    CHECK (source_account_id != destination_account_id);
+
+            ALTER TABLE payment_transactions
+                ADD CONSTRAINT chk_transaction_status
+                    CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED', 'CANCELLED'));
+
+            ALTER TABLE payment_transactions
+                ADD CONSTRAINT chk_transaction_type
+                    CHECK (transaction_type IN ('INTERNAL_TRANSFER', 'EXTERNAL_TRANSFER', 'DEPOSIT', 'WITHDRAWAL'));
+
+            ALTER TABLE payment_transactions
+                ADD CONSTRAINT chk_completed_at_logic
+                    CHECK ((status = 'COMPLETED' AND completed_at IS NOT NULL) OR (status != 'COMPLETED'));
+        </sql>
+
+        <rollback>
+            <dropTable tableName="payment_transactions"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

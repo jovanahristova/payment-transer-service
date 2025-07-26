@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+<changeSet id="02-create-accounts-table" author="banking-team" context="dev,prod">
+    <comment>Create accounts table for storing user account information</comment>
+
+    <createTable tableName="accounts">
+        <column name="account_id" type="VARCHAR(50)">
+            <constraints primaryKey="true" nullable="false"/>
+        </column>
+        <column name="user_id" type="VARCHAR(50)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="account_name" type="VARCHAR(100)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="account_type" type="VARCHAR(20)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="balance" type="DECIMAL(19,2)" defaultValue="0.00">
+            <constraints nullable="false"/>
+        </column>
+        <column name="currency" type="CHAR(3)" defaultValue="USD">
+            <constraints nullable="false"/>
+        </column>
+        <column name="status" type="VARCHAR(20)" defaultValue="ACTIVE">
+            <constraints nullable="false"/>
+        </column>
+        <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+            <constraints nullable="false"/>
+        </column>
+        <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+            <constraints nullable="false"/>
+        </column>
+        <column name="version" type="BIGINT" defaultValue="0">
+            <constraints nullable="false"/>
+        </column>
+    </createTable>
+    
+    <addForeignKeyConstraint baseTableName="accounts"
+                             baseColumnNames="user_id"
+                             constraintName="fk_account_user"
+                             referencedTableName="users"
+                             referencedColumnNames="user_id"
+                             onDelete="RESTRICT"
+                             onUpdate="CASCADE"/>
+
+    <sql>
+        ALTER TABLE accounts
+            ADD CONSTRAINT chk_balance_non_negative
+                CHECK (balance >= 0);
+
+        ALTER TABLE accounts
+            ADD CONSTRAINT chk_currency_format
+                CHECK (char_length(currency) = 3);
+
+        ALTER TABLE accounts
+            ADD CONSTRAINT chk_account_status
+                CHECK (status IN ('ACTIVE', 'SUSPENDED', 'CLOSED'));
+
+        ALTER TABLE accounts
+            ADD CONSTRAINT chk_account_type
+                CHECK (account_type IN ('CHECKING', 'SAVINGS', 'BUSINESS', 'INVESTMENT'));
+    </sql>
+
+    <rollback>
+        <dropTable tableName="accounts"/>
+    </rollback>
+</changeSet>
+
+
+</databaseChangeLog>
