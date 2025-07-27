@@ -10,6 +10,7 @@ import com.example.payment_transfer_service.repository.AccountRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserResponse createUser(UserRegistrationRequest request) {
@@ -41,6 +43,7 @@ public class UserService {
         user.setId(generateUserId());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setPhone(request.getPhone());

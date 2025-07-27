@@ -35,6 +35,9 @@ public class User {
     @Column(name = "phone")
     private String phone;
 
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private UserStatus status;
