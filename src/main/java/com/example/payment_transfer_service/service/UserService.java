@@ -62,46 +62,6 @@ public class UserService {
         return mapToUserResponse(user);
     }
 
-    @Transactional(readOnly = true)
-    public UserResponse getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new PaymentException("User not found", "USER_NOT_FOUND"));
-
-        return mapToUserResponse(user);
-    }
-
-    @Transactional(readOnly = true)
-    public List<UserResponse> getAllActiveUsers() {
-        return userRepository.findAllActiveUsers().stream()
-                .map(this::mapToUserResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public UserResponse updateUserStatus(String userId, UserStatus status) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new PaymentException("User not found", "USER_NOT_FOUND"));
-
-        user.setStatus(status);
-        User updatedUser = userRepository.save(user);
-
-        log.info("Updated user {} status to {}", userId, status);
-
-        return mapToUserResponse(updatedUser);
-    }
-
-    @Transactional(readOnly = true)
-    public boolean validateUserExists(String userId) {
-        return userRepository.existsById(userId);
-    }
-
-    @Transactional(readOnly = true)
-    public boolean validateUserActive(String userId) {
-        return userRepository.findById(userId)
-                .map(user -> user.getStatus() == UserStatus.ACTIVE)
-                .orElse(false);
-    }
-
     private String generateUserId() {
         return "USR" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }

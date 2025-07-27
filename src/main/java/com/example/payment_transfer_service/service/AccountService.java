@@ -91,10 +91,6 @@ public class AccountService {
         return accountRepository.findByIdAndUserId(accountId, userId).isPresent();
     }
 
-    @Transactional(readOnly = true)
-    public boolean validateBothAccountsOwnership(String accountId1, String accountId2, String userId) {
-        return accountRepository.countAccountsByIdsAndUserId(accountId1, accountId2, userId) == 2;
-    }
 
     private String generateAccountId() {
         return "ACC" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();

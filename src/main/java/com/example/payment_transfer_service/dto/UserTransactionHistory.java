@@ -24,13 +24,4 @@ public class UserTransactionHistory {
     private String reference;
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
-    private boolean isDebit; // true if money going out, false if coming in
-
-    public String getTransactionDescription() {
-        if (isDebit) {
-            return "Transfer to " + destinationAccountName;
-        } else {
-            return "Transfer from " + sourceAccountName;
-        }
-    }
 }

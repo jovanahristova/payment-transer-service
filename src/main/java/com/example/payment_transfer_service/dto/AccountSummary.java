@@ -18,8 +18,4 @@ public class AccountSummary {
     private String currency;
     private AccountStatus status;
     private LocalDateTime createdAt;
-
-    public String getDisplayName() {
-        return accountName + " (" + accountType + ")";
-    }
 }

@@ -22,7 +22,7 @@ public class Transaction {
     @Column(name = "transaction_id")
     private String id;
 
-    @Column(name = "user_id", nullable = false) // Who initiated the transaction
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
     @Column(name = "source_account_id", nullable = false)

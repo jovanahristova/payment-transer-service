@@ -30,7 +30,7 @@ public class Account {
     private User user;
 
     @Column(name = "account_name", nullable = false)
-    private String accountName; // e.g., "John's Checking", "Savings Account"
+    private String accountName;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)

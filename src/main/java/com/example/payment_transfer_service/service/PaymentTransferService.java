@@ -41,15 +41,12 @@ public class PaymentTransferService {
         try {
             validateUserTransferRequest(request);
 
-            // Determine transaction type
             TransactionType transactionType = determineTransactionType(request);
 
             Transaction transaction = createPendingUserTransaction(request, transactionType);
 
-            // Lock and process transfer
             processUserTransfer(request, transaction);
 
-            // Complete transaction
             transaction.setStatus(TransactionStatus.COMPLETED);
             transaction.setCompletedAt(LocalDateTime.now());
             transactionRepository.save(transaction);
@@ -69,7 +66,6 @@ public class PaymentTransferService {
         }
     }
 
-    // Legacy method for backward compatibility
     @Transactional
     public TransferResult transferFunds(TransferRequest request) {
         log.info("Starting legacy transfer from {} to {} for amount {}",
@@ -79,7 +75,6 @@ public class PaymentTransferService {
             validateTransferRequest(request);
             Transaction transaction = createPendingTransaction(request);
 
-            // Lock accounts in consistent order to prevent deadlock
             String firstAccountId = request.getSourceAccountId().compareTo(request.getDestinationAccountId()) < 0
                     ? request.getSourceAccountId() : request.getDestinationAccountId();
             String secondAccountId = request.getSourceAccountId().equals(firstAccountId)
@@ -176,8 +171,6 @@ public class PaymentTransferService {
     }
 
     private TransactionType determineTransactionType(UserTransferRequest request) {
-        // For now, all user transfers are internal (between own accounts)
-        // This can be enhanced later for external transfers
         return TransactionType.INTERNAL_TRANSFER;
     }
 
@@ -187,7 +180,7 @@ public class PaymentTransferService {
         transaction.setSourceAccountId(request.getSourceAccountId());
         transaction.setDestinationAccountId(request.getDestinationAccountId());
         transaction.setAmount(request.getAmount());
-        transaction.setCurrency("USD"); // Default currency
+        transaction.setCurrency("USD");
         transaction.setStatus(TransactionStatus.PENDING);
         transaction.setTransactionType(type);
         transaction.setDescription(request.getDescription());
@@ -197,7 +190,6 @@ public class PaymentTransferService {
     }
 
     private void processUserTransfer(UserTransferRequest request, Transaction transaction) {
-        // Lock accounts in consistent order to prevent deadlock
         String firstAccountId = request.getSourceAccountId().compareTo(request.getDestinationAccountId()) < 0
                 ? request.getSourceAccountId() : request.getDestinationAccountId();
         String secondAccountId = request.getSourceAccountId().equals(firstAccountId)
@@ -211,16 +203,13 @@ public class PaymentTransferService {
         Account destinationAccount = request.getDestinationAccountId().equals(firstAccountId)
                 ? firstAccount : secondAccount;
 
-        // Validate accounts for transfer
         validateUserAccountsForTransfer(sourceAccount, destinationAccount, request.getAmount(), request.getUserId());
 
-        // Process transfer
         processTransfer(sourceAccount, destinationAccount, request.getAmount());
     }
 
     private void validateUserAccountsForTransfer(Account sourceAccount, Account destinationAccount,
                                                  BigDecimal amount, String userId) {
-        // Validate account ownership
         if (!sourceAccount.belongsToUser(userId)) {
             throw new PaymentException("Source account access denied", "ACCOUNT_ACCESS_DENIED");
         }
@@ -229,7 +218,6 @@ public class PaymentTransferService {
             throw new PaymentException("Destination account access denied", "ACCOUNT_ACCESS_DENIED");
         }
 
-        // Standard account validations
         validateAccountsForTransfer(sourceAccount, destinationAccount, amount);
     }
 
@@ -238,10 +226,6 @@ public class PaymentTransferService {
     }
 
     private UserTransactionHistory mapToUserTransactionHistory(Transaction transaction, String userId, String focusAccountId) {
-        // Determine if this is a debit or credit from user's perspective
-        boolean isDebit = transaction.getSourceAccountId().equals(focusAccountId) ||
-                (focusAccountId == null && transaction.getUserId().equals(userId));
-
         return UserTransactionHistory.builder()
                 .id(transaction.getId())
                 .sourceAccountId(transaction.getSourceAccountId())
@@ -256,7 +240,6 @@ public class PaymentTransferService {
                 .reference(transaction.getReference())
                 .createdAt(transaction.getCreatedAt())
                 .completedAt(transaction.getCompletedAt())
-                .isDebit(isDebit)
                 .build();
     }
 
@@ -266,7 +249,6 @@ public class PaymentTransferService {
                 .orElse("Unknown Account");
     }
 
-    // Legacy methods (keep for backward compatibility)
     private void validateTransferRequest(TransferRequest request) {
         if (request.getSourceAccountId().equals(request.getDestinationAccountId())) {
             throw new PaymentException("Source and destination accounts cannot be the same", "SAME_ACCOUNT");
@@ -279,7 +261,7 @@ public class PaymentTransferService {
 
     private Transaction createPendingTransaction(TransferRequest request) {
         Transaction transaction = new Transaction();
-        transaction.setUserId("SYSTEM"); // Legacy transactions
+        transaction.setUserId("SYSTEM");
         transaction.setSourceAccountId(request.getSourceAccountId());
         transaction.setDestinationAccountId(request.getDestinationAccountId());
         transaction.setAmount(request.getAmount());

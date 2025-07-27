@@ -20,8 +20,4 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<AccountSummary> accounts;
-
-    public String getFullName() {
-        return firstName + " " + lastName;
-    }
 }
