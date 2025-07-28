@@ -37,18 +37,4 @@ public class UserController {
         return ResponseEntity.ok(transactions);
     }
 
-    @PostMapping("/{userId}/transfer")
-    public ResponseEntity<TransferResult> transferFunds(
-            @PathVariable String userId,
-            @Valid @RequestBody UserTransferRequest request) {
-        request.setUserId(userId);
-        TransferResult result = paymentTransferService.transferFunds(request);
-
-        if (result.isSuccess()) {
-            return ResponseEntity.ok(result);
-        } else {
-            return ResponseEntity.badRequest().body(result);
-        }
-    }
-
 }

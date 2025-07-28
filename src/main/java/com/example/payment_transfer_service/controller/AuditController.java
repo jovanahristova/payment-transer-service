@@ -2,6 +2,8 @@ package com.example.payment_transfer_service.controller;
 
 import com.example.payment_transfer_service.entity.TransactionAudit;
 import com.example.payment_transfer_service.repository.TransactionAuditRepository;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +18,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/audit")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")  // Now requires JWT token
+@Tag(name = "Audit Operations", description = "...")
 public class AuditController {
 
     private final TransactionAuditRepository auditRepository;

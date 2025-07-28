@@ -16,7 +16,7 @@ public class JwtUtil {
     @Value("${app.jwt.secret:mySecretKeyThatShouldBeAtLeast256BitsLongForHS256Algorithm}")
     private String jwtSecret;
 
-    @Value("${app.jwt.expiration:86400000}") // 24 hours in milliseconds
+    @Value("${app.jwt.expiration:86400000}")
     private int jwtExpirationMs;
 
     private Key getSigningKey() {

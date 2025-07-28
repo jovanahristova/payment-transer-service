@@ -1,7 +1,6 @@
 package com.example.payment_transfer_service.service;
 
 import com.example.payment_transfer_service.dto.TransferRequest;
-import com.example.payment_transfer_service.dto.UserTransferRequest;
 import com.example.payment_transfer_service.dto.TransferResult;
 import com.example.payment_transfer_service.entity.*;
 import com.example.payment_transfer_service.exception.*;
@@ -96,94 +95,6 @@ class PaymentTransferServiceTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(userPrincipal);
         when(userPrincipal.getId()).thenReturn("user123");
-    }
-
-    @Test
-    void transferFunds_UserTransfer_Success() {
-        UserTransferRequest request = new UserTransferRequest();
-        request.setUserId("user123");
-        request.setSourceAccountId("acc1");
-        request.setDestinationAccountId("acc2");
-        request.setAmount(new BigDecimal("100.00"));
-
-        when(userRepository.findById("user123")).thenReturn(Optional.of(testUser));
-        when(accountService.validateAccountOwnership("acc1", "user123")).thenReturn(true);
-        when(accountService.validateAccountOwnership("acc2", "user123")).thenReturn(true);
-        when(transactionRepository.save(any(Transaction.class))).thenReturn(testTransaction);
-        when(accountRepository.findByIdForUpdate("acc1")).thenReturn(Optional.of(sourceAccount));
-        when(accountRepository.findByIdForUpdate("acc2")).thenReturn(Optional.of(destinationAccount));
-        when(accountRepository.findById("acc1")).thenReturn(Optional.of(sourceAccount));
-        when(accountRepository.findById("acc2")).thenReturn(Optional.of(destinationAccount));
-
-        TransferResult result = paymentTransferService.transferFunds(request);
-
-        assertTrue(result.isSuccess());
-        assertEquals("txn123", result.getTransactionId());
-        verify(auditService).recordSuccessfulTransfer(any(Transaction.class),
-                eq(new BigDecimal("1000.00")), eq(new BigDecimal("900.00")),
-                eq(new BigDecimal("500.00")), eq(new BigDecimal("600.00")));
-        verify(accountRepository, times(2)).save(any(Account.class));
-    }
-
-    @Test
-    void transferFunds_UserTransfer_InsufficientFunds() {
-        UserTransferRequest request = new UserTransferRequest();
-        request.setUserId("user123");
-        request.setSourceAccountId("acc1");
-        request.setDestinationAccountId("acc2");
-        request.setAmount(new BigDecimal("2000.00")); // More than balance
-
-        sourceAccount.setBalance(new BigDecimal("100.00")); // Low balance
-
-        when(userRepository.findById("user123")).thenReturn(Optional.of(testUser));
-        when(accountService.validateAccountOwnership("acc1", "user123")).thenReturn(true);
-        when(accountService.validateAccountOwnership("acc2", "user123")).thenReturn(true);
-        when(transactionRepository.save(any(Transaction.class))).thenReturn(testTransaction);
-        when(accountRepository.findByIdForUpdate("acc1")).thenReturn(Optional.of(sourceAccount));
-        when(accountRepository.findByIdForUpdate("acc2")).thenReturn(Optional.of(destinationAccount));
-
-        TransferResult result = paymentTransferService.transferFunds(request);
-
-        assertFalse(result.isSuccess());
-        verify(auditService).recordFailedTransfer(
-                eq("user123"), eq("acc1"), eq("acc2"),
-                eq(new BigDecimal("2000.00")), anyString());
-    }
-
-    @Test
-    void transferFunds_UserTransfer_UserNotFound() {
-        UserTransferRequest request = new UserTransferRequest();
-        request.setUserId("user123");
-        request.setSourceAccountId("acc1");
-        request.setDestinationAccountId("acc2");
-        request.setAmount(new BigDecimal("100.00"));
-
-        when(userRepository.findById("user123")).thenReturn(Optional.empty());
-
-        TransferResult result = paymentTransferService.transferFunds(request);
-
-        assertFalse(result.isSuccess());
-        assertEquals("USER_NOT_FOUND", result.getErrorCode());
-        verify(auditService).recordFailedTransfer(
-                eq("user123"), eq("acc1"), eq("acc2"),
-                eq(new BigDecimal("100.00")), eq("User not found"));
-    }
-
-    @Test
-    void transferFunds_UserTransfer_SameAccount() {
-        UserTransferRequest request = new UserTransferRequest();
-        request.setUserId("user123");
-        request.setSourceAccountId("acc1");
-        request.setDestinationAccountId("acc1"); // Same account
-        request.setAmount(new BigDecimal("100.00"));
-
-        when(userRepository.findById("user123")).thenReturn(Optional.of(testUser));
-        when(accountService.validateAccountOwnership("acc1", "user123")).thenReturn(true);
-
-        TransferResult result = paymentTransferService.transferFunds(request);
-
-        assertFalse(result.isSuccess());
-        assertEquals("SAME_ACCOUNT", result.getErrorCode());
     }
 
     @Test

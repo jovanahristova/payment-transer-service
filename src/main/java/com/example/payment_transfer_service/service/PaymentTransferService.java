@@ -38,97 +38,6 @@ public class PaymentTransferService {
     private final AuditService auditService;
 
     @Transactional
-    public TransferResult transferFunds(UserTransferRequest request) {
-        log.info("Starting user transfer from {} to {} for amount {} by user {}",
-                request.getSourceAccountId(), request.getDestinationAccountId(),
-                request.getAmount(), request.getUserId());
-
-        BigDecimal sourceBalanceBefore = null;
-        BigDecimal destBalanceBefore = null;
-        Transaction transaction = null;
-
-        try {
-            validateUserTransferRequest(request);
-
-            TransactionType transactionType = determineTransactionType(request);
-
-            transaction = createPendingUserTransaction(request, transactionType);
-
-            Account sourceAccount = lockAndGetAccount(request.getSourceAccountId());
-            Account destinationAccount = lockAndGetAccount(request.getDestinationAccountId());
-            sourceBalanceBefore = sourceAccount.getBalance();
-            destBalanceBefore = destinationAccount.getBalance();
-
-            processUserTransfer(request, transaction);
-
-            sourceAccount = accountRepository.findById(request.getSourceAccountId())
-                    .orElseThrow(() -> new AccountNotFoundException(request.getSourceAccountId()));
-            destinationAccount = accountRepository.findById(request.getDestinationAccountId())
-                    .orElseThrow(() -> new AccountNotFoundException(request.getDestinationAccountId()));
-
-            BigDecimal sourceBalanceAfter = sourceAccount.getBalance();
-            BigDecimal destBalanceAfter = destinationAccount.getBalance();
-
-            transaction.setStatus(TransactionStatus.COMPLETED);
-            transaction.setCompletedAt(LocalDateTime.now());
-            transactionRepository.save(transaction);
-
-            auditService.recordSuccessfulTransfer(transaction,
-                    sourceBalanceBefore, sourceBalanceAfter,
-                    destBalanceBefore, destBalanceAfter);
-
-            log.info("User transfer completed successfully. Transaction ID: {}", transaction.getId());
-
-            return TransferResult.success(transaction.getId(),
-                    "Transfer completed successfully", transactionType);
-
-        } catch (PaymentException e) {
-            log.error("User transfer failed: {}", e.getMessage());
-
-            if (transaction != null) {
-                try {
-                    transaction.setStatus(TransactionStatus.FAILED);
-                    transactionRepository.save(transaction);
-                } catch (Exception saveException) {
-                    log.error("Failed to update transaction status to FAILED", saveException);
-                }
-            }
-
-            auditService.recordFailedTransfer(
-                    request.getUserId(),
-                    request.getSourceAccountId(),
-                    request.getDestinationAccountId(),
-                    request.getAmount(),
-                    e.getMessage()
-            );
-
-            return TransferResult.failure(e.getMessage(), e.getErrorCode());
-
-        } catch (Exception e) {
-            log.error("Unexpected error during user transfer", e);
-
-            if (transaction != null) {
-                try {
-                    transaction.setStatus(TransactionStatus.FAILED);
-                    transactionRepository.save(transaction);
-                } catch (Exception saveException) {
-                    log.error("Failed to update transaction status to FAILED", saveException);
-                }
-            }
-
-            auditService.recordFailedTransfer(
-                    request.getUserId(),
-                    request.getSourceAccountId(),
-                    request.getDestinationAccountId(),
-                    request.getAmount(),
-                    "Internal server error: " + e.getMessage()
-            );
-
-            return TransferResult.failure("Internal server error", "INTERNAL_ERROR");
-        }
-    }
-
-    @Transactional
     public TransferResult transferFunds(TransferRequest request) {
         log.info("Starting legacy transfer from {} to {} for amount {}",
                 request.getSourceAccountId(), request.getDestinationAccountId(), request.getAmount());
@@ -167,7 +76,7 @@ public class PaymentTransferService {
 
             transaction.setStatus(TransactionStatus.COMPLETED);
             transaction.setCompletedAt(LocalDateTime.now());
-            log.info("JJJJTransaction created: {} at {}", transaction.getId(), transaction.getCreatedAt());
+            log.info("Transaction created: {} at {}", transaction.getId(), transaction.getCreatedAt());
             transactionRepository.save(transaction);
 
             auditService.recordSuccessfulTransfer(transaction,
