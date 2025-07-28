@@ -8,9 +8,8 @@
     <include file="db/changelog/v1.0/01-create-users-table.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/v1.0/02-create-accounts-table.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/v1.0/03-create-transactions-table.xml" relativeToChangelogFile="false"/>
-    <include file="db/changelog/v1.0/04-create-indexes.xml" relativeToChangelogFile="false"/>
-    <include file="db/changelog/v1.0/05-insert-sample-data.xml" relativeToChangelogFile="false"/>
-    <include file="db/changelog/v1.0/06-create-audit-table.xml" relativeToChangelogFile="false"/>
-    <include file="db/changelog/v1.0/07-add-password-field.xml" relativeToChangelogFile="false"/>
+    <include file="/db/changelog/v1.0/04-insert-sample-data.xml" relativeToChangelogFile="false"/>
+    <include file="/db/changelog/v1.0/05-create-audit-table.xml" relativeToChangelogFile="false"/>
+    <include file="/db/changelog/v1.0/06-add-password-field.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
