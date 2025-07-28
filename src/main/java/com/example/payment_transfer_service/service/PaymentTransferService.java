@@ -10,10 +10,14 @@ import com.example.payment_transfer_service.repository.AccountRepository;
 import com.example.payment_transfer_service.repository.TransactionRepository;
 import com.example.payment_transfer_service.repository.UserRepository;
 
+import com.example.payment_transfer_service.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,6 +97,7 @@ public class PaymentTransferService {
 
             transaction.setStatus(TransactionStatus.COMPLETED);
             transaction.setCompletedAt(LocalDateTime.now());
+            log.info("JJJJTransaction created: {} at {}", transaction.getId(), transaction.getCreatedAt());
             transactionRepository.save(transaction);
 
             log.info("Legacy transfer completed successfully. Transaction ID: {}", transaction.getId());
@@ -125,7 +130,6 @@ public class PaymentTransferService {
 
     @Transactional(readOnly = true)
     public List<UserTransactionHistory> getAccountTransactionHistory(String accountId, String userId) {
-        // Validate account ownership
         if (!accountService.validateAccountOwnership(accountId, userId)) {
             throw new PaymentException("Account access denied", "ACCOUNT_ACCESS_DENIED");
         }
@@ -137,7 +141,6 @@ public class PaymentTransferService {
     }
 
     private void validateUserTransferRequest(UserTransferRequest request) {
-        // Validate user exists and is active
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new PaymentException("User not found", "USER_NOT_FOUND"));
 
@@ -145,7 +148,6 @@ public class PaymentTransferService {
             throw new PaymentException("User account is not active", "USER_INACTIVE");
         }
 
-        // Validate accounts belong to user
         if (!accountService.validateAccountOwnership(request.getSourceAccountId(), request.getUserId())) {
             throw new PaymentException("Source account access denied", "ACCOUNT_ACCESS_DENIED");
         }
@@ -154,7 +156,6 @@ public class PaymentTransferService {
             throw new PaymentException("Destination account access denied", "ACCOUNT_ACCESS_DENIED");
         }
 
-        // Basic validations
         if (request.getSourceAccountId().equals(request.getDestinationAccountId())) {
             throw new PaymentException("Source and destination accounts cannot be the same", "SAME_ACCOUNT");
         }
@@ -163,7 +164,6 @@ public class PaymentTransferService {
             throw new PaymentException("Transfer amount must be positive", "INVALID_AMOUNT");
         }
 
-        // Check for duplicate reference
         if (request.getReference() != null &&
                 transactionRepository.existsByReferenceAndUserId(request.getReference(), request.getUserId())) {
             throw new PaymentException("Reference number already exists for this user", "DUPLICATE_REFERENCE");
@@ -185,7 +185,6 @@ public class PaymentTransferService {
         transaction.setTransactionType(type);
         transaction.setDescription(request.getDescription());
         transaction.setReference(request.getReference());
-
         return transactionRepository.save(transaction);
     }
 
@@ -259,9 +258,28 @@ public class PaymentTransferService {
         }
     }
 
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("No authenticated user found");
+        }
+
+        if (authentication.getPrincipal() instanceof UserPrincipal) {
+            return ((UserPrincipal) authentication.getPrincipal()).getId();
+        }
+
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            return ((UserDetails) authentication.getPrincipal()).getUsername();
+        }
+
+        return authentication.getName();
+    }
+
     private Transaction createPendingTransaction(TransferRequest request) {
+        String userId = getCurrentUserId();
         Transaction transaction = new Transaction();
-        transaction.setUserId("SYSTEM");
+        transaction.setUserId(userId);
         transaction.setSourceAccountId(request.getSourceAccountId());
         transaction.setDestinationAccountId(request.getDestinationAccountId());
         transaction.setAmount(request.getAmount());

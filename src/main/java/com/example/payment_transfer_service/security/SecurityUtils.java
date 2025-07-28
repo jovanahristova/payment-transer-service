@@ -6,7 +6,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class SecurityUtils {
 
     private SecurityUtils() {
-        // Private constructor to prevent instantiation
     }
 
     public static String getCurrentUserId() {

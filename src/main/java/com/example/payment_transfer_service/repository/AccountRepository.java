@@ -27,8 +27,4 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     @Query("SELECT a FROM Account a WHERE a.id = :accountId AND a.userId = :userId")
     Optional<Account> findByIdAndUserId(@Param("accountId") String accountId, @Param("userId") String userId);
 
-    @Query("SELECT COUNT(a) FROM Account a WHERE a.id IN (:accountId1, :accountId2) AND a.userId = :userId")
-    long countAccountsByIdsAndUserId(@Param("accountId1") String accountId1,
-                                     @Param("accountId2") String accountId2,
-                                     @Param("userId") String userId);
 }
