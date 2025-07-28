@@ -104,6 +104,26 @@ GET /api/v1/audit/daily?date={date}
 - `COMPLETED`: Transfer successfully processed
 - `FAILED`: Transfer failed due to validation or system errors
 
+Security Considerations
+
+ Authentication
+- JWT token-based authentication
+- Token expiration and refresh handling
+- Role-based access control
+
+ Data Protection
+- Password hashing with BCrypt
+- Sensitive data encryption
+- Account ownership validation
+- Audit log immutability
+
+ Transfer Security
+- Atomic transaction processing
+- Duplicate transaction prevention
+- Real-time balance validation
+- Comprehensive audit trails
+
+
  Getting Started
 
  Prerequisites
@@ -161,21 +181,4 @@ GET /api/v1/audit/daily?date={date}
 ```
 
 
- Security Considerations
-
- Authentication
-- JWT token-based authentication
-- Token expiration and refresh handling
-- Role-based access control
-
- Data Protection
-- Password hashing with BCrypt
-- Sensitive data encryption
-- Account ownership validation
-- Audit log immutability
-
- Transfer Security
-- Atomic transaction processing
-- Duplicate transaction prevention
-- Real-time balance validation
-- Comprehensive audit trails
+ 
