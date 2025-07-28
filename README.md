@@ -16,7 +16,7 @@ The Payment Transfer Service provides RESTful APIs for:
 
  Technology Stack
 - Framework: Spring Boot 3.x
-- Database: JPA/Hibernate with PostgreSQL/MySQL
+- Database: JPA/Hibernate with PostgreSQL
 - Security: Spring Security with JWT authentication
 - Documentation: OpenAPI 3.0 (Swagger)
 - Testing: JUnit 5, Mockito
@@ -109,7 +109,7 @@ GET /api/v1/audit/daily?date={date}
  Prerequisites
 - Java 17+
 - Maven 3.6+
-- Database (PostgreSQL/MySQL)
+- Database (PostgreSQL)
 
  Running the Application
 
