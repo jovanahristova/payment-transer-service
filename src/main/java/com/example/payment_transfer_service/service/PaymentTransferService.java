@@ -35,6 +35,7 @@ public class PaymentTransferService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final AccountService accountService;
+    private final AuditService auditService;
 
     @Transactional
     public TransferResult transferFunds(UserTransferRequest request) {
@@ -42,18 +43,39 @@ public class PaymentTransferService {
                 request.getSourceAccountId(), request.getDestinationAccountId(),
                 request.getAmount(), request.getUserId());
 
+        BigDecimal sourceBalanceBefore = null;
+        BigDecimal destBalanceBefore = null;
+        Transaction transaction = null;
+
         try {
             validateUserTransferRequest(request);
 
             TransactionType transactionType = determineTransactionType(request);
 
-            Transaction transaction = createPendingUserTransaction(request, transactionType);
+            transaction = createPendingUserTransaction(request, transactionType);
+
+            Account sourceAccount = lockAndGetAccount(request.getSourceAccountId());
+            Account destinationAccount = lockAndGetAccount(request.getDestinationAccountId());
+            sourceBalanceBefore = sourceAccount.getBalance();
+            destBalanceBefore = destinationAccount.getBalance();
 
             processUserTransfer(request, transaction);
+
+            sourceAccount = accountRepository.findById(request.getSourceAccountId())
+                    .orElseThrow(() -> new AccountNotFoundException(request.getSourceAccountId()));
+            destinationAccount = accountRepository.findById(request.getDestinationAccountId())
+                    .orElseThrow(() -> new AccountNotFoundException(request.getDestinationAccountId()));
+
+            BigDecimal sourceBalanceAfter = sourceAccount.getBalance();
+            BigDecimal destBalanceAfter = destinationAccount.getBalance();
 
             transaction.setStatus(TransactionStatus.COMPLETED);
             transaction.setCompletedAt(LocalDateTime.now());
             transactionRepository.save(transaction);
+
+            auditService.recordSuccessfulTransfer(transaction,
+                    sourceBalanceBefore, sourceBalanceAfter,
+                    destBalanceBefore, destBalanceAfter);
 
             log.info("User transfer completed successfully. Transaction ID: {}", transaction.getId());
 
@@ -62,10 +84,46 @@ public class PaymentTransferService {
 
         } catch (PaymentException e) {
             log.error("User transfer failed: {}", e.getMessage());
+
+            if (transaction != null) {
+                try {
+                    transaction.setStatus(TransactionStatus.FAILED);
+                    transactionRepository.save(transaction);
+                } catch (Exception saveException) {
+                    log.error("Failed to update transaction status to FAILED", saveException);
+                }
+            }
+
+            auditService.recordFailedTransfer(
+                    request.getUserId(),
+                    request.getSourceAccountId(),
+                    request.getDestinationAccountId(),
+                    request.getAmount(),
+                    e.getMessage()
+            );
+
             return TransferResult.failure(e.getMessage(), e.getErrorCode());
 
         } catch (Exception e) {
             log.error("Unexpected error during user transfer", e);
+
+            if (transaction != null) {
+                try {
+                    transaction.setStatus(TransactionStatus.FAILED);
+                    transactionRepository.save(transaction);
+                } catch (Exception saveException) {
+                    log.error("Failed to update transaction status to FAILED", saveException);
+                }
+            }
+
+            auditService.recordFailedTransfer(
+                    request.getUserId(),
+                    request.getSourceAccountId(),
+                    request.getDestinationAccountId(),
+                    request.getAmount(),
+                    "Internal server error: " + e.getMessage()
+            );
+
             return TransferResult.failure("Internal server error", "INTERNAL_ERROR");
         }
     }
@@ -75,9 +133,15 @@ public class PaymentTransferService {
         log.info("Starting legacy transfer from {} to {} for amount {}",
                 request.getSourceAccountId(), request.getDestinationAccountId(), request.getAmount());
 
+        String userId = null;
+        BigDecimal sourceBalanceBefore = null;
+        BigDecimal destBalanceBefore = null;
+        Transaction transaction = null;
+
         try {
+            userId = getCurrentUserId();
             validateTransferRequest(request);
-            Transaction transaction = createPendingTransaction(request);
+            transaction = createPendingTransaction(request);
 
             String firstAccountId = request.getSourceAccountId().compareTo(request.getDestinationAccountId()) < 0
                     ? request.getSourceAccountId() : request.getDestinationAccountId();
@@ -92,13 +156,23 @@ public class PaymentTransferService {
             Account destinationAccount = request.getDestinationAccountId().equals(firstAccountId)
                     ? firstAccount : secondAccount;
 
+            sourceBalanceBefore = sourceAccount.getBalance();
+            destBalanceBefore = destinationAccount.getBalance();
+
             validateAccountsForTransfer(sourceAccount, destinationAccount, request.getAmount());
             processTransfer(sourceAccount, destinationAccount, request.getAmount());
+
+            BigDecimal sourceBalanceAfter = sourceAccount.getBalance();
+            BigDecimal destBalanceAfter = destinationAccount.getBalance();
 
             transaction.setStatus(TransactionStatus.COMPLETED);
             transaction.setCompletedAt(LocalDateTime.now());
             log.info("JJJJTransaction created: {} at {}", transaction.getId(), transaction.getCreatedAt());
             transactionRepository.save(transaction);
+
+            auditService.recordSuccessfulTransfer(transaction,
+                    sourceBalanceBefore, sourceBalanceAfter,
+                    destBalanceBefore, destBalanceAfter);
 
             log.info("Legacy transfer completed successfully. Transaction ID: {}", transaction.getId());
 
@@ -106,10 +180,46 @@ public class PaymentTransferService {
 
         } catch (PaymentException e) {
             log.error("Legacy transfer failed: {}", e.getMessage());
+
+            if (transaction != null) {
+                try {
+                    transaction.setStatus(TransactionStatus.FAILED);
+                    transactionRepository.save(transaction);
+                } catch (Exception saveException) {
+                    log.error("Failed to update transaction status to FAILED", saveException);
+                }
+            }
+
+            auditService.recordFailedTransfer(
+                    userId != null ? userId : "UNKNOWN",
+                    request.getSourceAccountId(),
+                    request.getDestinationAccountId(),
+                    request.getAmount(),
+                    e.getMessage()
+            );
+
             return TransferResult.failure(e.getMessage(), e.getErrorCode());
 
         } catch (Exception e) {
             log.error("Unexpected error during legacy transfer", e);
+
+            if (transaction != null) {
+                try {
+                    transaction.setStatus(TransactionStatus.FAILED);
+                    transactionRepository.save(transaction);
+                } catch (Exception saveException) {
+                    log.error("Failed to update transaction status to FAILED", saveException);
+                }
+            }
+
+            auditService.recordFailedTransfer(
+                    userId != null ? userId : "UNKNOWN",
+                    request.getSourceAccountId(),
+                    request.getDestinationAccountId(),
+                    request.getAmount(),
+                    "Internal server error: " + e.getMessage()
+            );
+
             return TransferResult.failure("Internal server error", "INTERNAL_ERROR");
         }
     }
